@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workforce Management System</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #fafafa; padding: 0; margin: 0; }
+    body { font-family: Arial, sans-serif; background: #fafafa; margin:0; }
     h1 { font-size: 2rem; color: #2563eb; margin-bottom: 0; }
     header p { color: #555; }
-    main { max-width: 680px; margin: auto; padding: 2rem 1rem; }
+    main { max-width: 720px; margin: auto; padding: 2rem 1rem; }
     .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 8px 0 #0001; }
     label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333; }
-    input, select { width: 100%; padding: 0.6rem; border-radius: 5px; border: 1px solid #bbb; font-size: 1rem; margin-bottom: 0.5rem; }
+    input, select { width: 100%; padding: 0.6rem; border-radius: 5px; border: 1px solid #bbb; font-size: 1rem; margin-bottom: 0.5rem; box-sizing: border-box; }
     .shift-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
     .shift-tab { flex: 1; background: #f0f4ff; border: 1px solid #2563eb; border-radius: 6px; font-weight: bold; color: #2563eb; padding: 0.5rem; cursor: pointer; transition: background 0.2s;}
     .shift-tab.active { background: #2563eb; color: #fff; }
@@ -19,14 +19,17 @@
     #submit-btn.loading { background: #aaa; }
     .summary-cards { display: flex; gap: 1rem; margin-bottom: 1rem; }
     .summary-card { flex: 1; background: #eaf2ff; border-radius: 7px; padding: 1rem; text-align: center;}
-    .summary-card h3 { color: #2563eb; font-size: 1rem; margin-bottom: 0.5rem;}
+    .summary-card h3 { color: #2563eb; font-size: 1rem; margin-bottom: 0.2rem;}
     .summary-card p { font-size: 2rem; margin: 0;}
     table { width: 100%; border-collapse: collapse; margin: 1rem 0;}
     th, td { padding: 0.6rem; border-bottom: 1px solid #eee; text-align: left;}
     th { color: #2563eb; background: #f6faff; font-size: 0.95rem;}
-    .toast { position: fixed; top:1rem; right:1rem; z-index:9000; padding:0.8rem 1.5rem; border-radius:8px; color:#fff; font-weight:bold; opacity:0.95;}
+    .toast { position: fixed; top:1rem; right:1rem; z-index:9000; padding:0.8rem 1.5rem; border-radius:8px; color:#fff; font-weight:bold; opacity:0.96; }
     .toast.success { background:#10b981; }
     .toast.error { background:#dc2626; }
+    @media (max-width: 700px) {
+      .summary-cards { flex-direction: column; gap: 0.7rem; }
+    }
   </style>
 </head>
 <body>
@@ -35,15 +38,13 @@
       <h1>Workforce Management System</h1>
       <p>Your Company</p>
     </header>
-
     <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:1.5rem;">
       <button id="contractor-tab" class="shift-tab active" style="flex:unset;">Contractor</button>
       <button id="hr-tab" class="shift-tab" style="flex:unset;">HR Dashboard</button>
     </div>
-
     <!-- Contractor Entry -->
     <section id="contractor-interface">
-      <form class="card">
+      <form class="card" autocomplete="off">
         <label for="contractor-select">Select Contractor</label>
         <select id="contractor-select" required>
           <option value="">Choose a contractor...</option>
@@ -53,10 +54,8 @@
           <option value="Prime Contractors Inc">Prime Contractors Inc</option>
           <option value="Elite Workforce Solutions">Elite Workforce Solutions</option>
         </select>
-
         <label for="date-select">Date</label>
         <input type="date" id="date-select" required>
-
         <label>Select Shift</label>
         <div class="shift-tabs" id="shift-tabs">
           <div class="shift-tab active" data-shift="A">A Shift<br><span style="font-size: 0.85em;">6:00 AM</span></div>
@@ -64,14 +63,11 @@
           <div class="shift-tab" data-shift="B">B Shift<br><span style="font-size: 0.85em;">2:00 PM</span></div>
           <div class="shift-tab" data-shift="C">C Shift<br><span style="font-size: 0.85em;">10:00 PM</span></div>
         </div>
-
         <label>Manpower Allocation</label>
         <div id="manpower-blocks"></div>
-
         <button id="submit-btn" type="button">Submit Manpower Data</button>
       </form>
     </section>
-
     <!-- HR Dashboard -->
     <section id="hr-interface" style="display:none;">
       <div class="card">
@@ -87,18 +83,9 @@
         <button id="export-btn" style="background:#10b981; color:#fff; margin-top:0.8rem; border:none; border-radius:6px; padding:0.7rem; font-size: 1rem; font-weight:bold;width:100%;">Export Report</button>
       </div>
       <div class="summary-cards">
-        <div class="summary-card">
-          <h3>Total Manpower</h3>
-          <p id="total-manpower">0</p>
-        </div>
-        <div class="summary-card">
-          <h3>Active Contractors</h3>
-          <p id="active-contractors">0</p>
-        </div>
-        <div class="summary-card">
-          <h3>Blocks Covered</h3>
-          <p id="blocks-covered">0</p>
-        </div>
+        <div class="summary-card"><h3>Total Manpower</h3><p id="total-manpower">0</p></div>
+        <div class="summary-card"><h3>Active Contractors</h3><p id="active-contractors">0</p></div>
+        <div class="summary-card"><h3>Blocks Covered</h3><p id="blocks-covered">0</p></div>
       </div>
       <div class="card">
         <h3 style="color:#2563eb;">Manpower Breakdown</h3>
@@ -117,22 +104,14 @@
       </div>
     </section>
   </main>
-
   <script>
-    // === Replace with your own Google Apps Script Web App URL ===
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaMYrscznu7AsFxcTumw1n3LYDMNGOkJj6JXVK1yHdR0gfMsmyoEX96NgwQxlaHV-pXQ/exec";
-    // ===========================================================
+    // *** REPLACE with your own Google Apps Script Web App URL after deploying the script! ***
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPn-2Rcvy929cLeIf7r4JlE-5rhrLSju8E3KlsarqQtlX4huk_s-cj4P7gLU1y956G0A/exec";
 
     // App logic
     const blocks = [
-      'Block A - Production',
-      'Block B - Assembly',
-      'Block C - Quality Control',
-      'Block D - Packaging',
-      'Block E - Maintenance',
-      'Block F - Logistics',
-      'Block G - Administration',
-      'Block H - Security'
+      'Block A - Production','Block B - Assembly','Block C - Quality Control','Block D - Packaging',
+      'Block E - Maintenance','Block F - Logistics','Block G - Administration','Block H - Security'
     ];
     let currentShift = 'A';
     let localRecords = [];
@@ -143,7 +122,7 @@
       toast.className = "toast " + type;
       toast.innerText = msg;
       document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3100);
+      setTimeout(() => toast.remove(), 3200);
     }
 
     function setupShifts() {
@@ -162,9 +141,9 @@
       container.innerHTML = "";
       blocks.forEach((block, i) => {
         const div = document.createElement('div');
-        div.style = "display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;";
+        div.style = "display:flex;gap:0.5rem;align-items:center;margin-bottom:0.3rem;";
         div.innerHTML = `<span style="flex:1">${block}</span>
-          <input type="number" id="manpower-${i}" min="0" placeholder="0" style="width:70px;">`;
+          <input type="number" id="manpower-${i}" min="0" placeholder="0" style="width:80px;">`;
         container.appendChild(div);
       });
     }
@@ -174,28 +153,27 @@
       el.value = new Date().toISOString().split("T")[0];
     }
 
-    document.getElementById('contractor-tab').onclick = function() {
-      this.classList.add('active');
+    function switchToContractor() {
+      document.getElementById('contractor-tab').classList.add('active');
       document.getElementById('hr-tab').classList.remove('active');
       document.getElementById('contractor-interface').style.display = '';
       document.getElementById('hr-interface').style.display = 'none';
-    };
-
-    document.getElementById('hr-tab').onclick = function() {
-      this.classList.add('active');
+    }
+    function switchToHR() {
+      document.getElementById('hr-tab').classList.add('active');
       document.getElementById('contractor-tab').classList.remove('active');
       document.getElementById('contractor-interface').style.display = 'none';
       document.getElementById('hr-interface').style.display = '';
       updateHRDashboard();
-    };
+    }
+    document.getElementById('contractor-tab').onclick = switchToContractor;
+    document.getElementById('hr-tab').onclick = switchToHR;
 
     document.getElementById('submit-btn').onclick = async function(e) {
       if(isLoading) return;
-      const contractorName = document.getElementById('contractor-select').value;
-      const date = document.getElementById('date-select').value;
+      const contractorName = document.getElementById('contractor-select').value; const date = document.getElementById('date-select').value;
       if (!contractorName) return showToast("Please select a contractor", "error");
       if (!date) return showToast("Please select a date", "error");
-
       let manpowerData = [];
       blocks.forEach((block, i) => {
         const manpower = parseInt(document.getElementById(`manpower-${i}`).value) || 0;
@@ -212,24 +190,21 @@
       });
       if(manpowerData.length === 0) return showToast("Please enter manpower for at least one block", "error");
 
-      isLoading = true;
-      this.classList.add("loading");
+      isLoading = true; this.classList.add("loading");
+      let errors = 0;
       for (let record of manpowerData) {
         try {
           const res = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify(record),
+            method: "POST", body: JSON.stringify(record),
             headers: { "Content-Type": "application/json" }
           });
           if (!res.ok) throw new Error(await res.text());
           localRecords.push(record);
         } catch (err) {
-          showToast("Error submitting data: " + err.message, "error");
-          isLoading = false; this.classList.remove("loading");
-          return;
+          errors++; showToast("Error submitting data: " + err.message, "error");
         }
       }
-      showToast("Manpower data submitted successfully!", "success");
+      if(errors===0) showToast("Manpower data submitted successfully!", "success");
       blocks.forEach((_, i) => document.getElementById(`manpower-${i}`).value = "");
       this.classList.remove("loading");
       isLoading = false;
@@ -260,6 +235,7 @@
         </tr>`;
       });
     }
+
     document.getElementById('hr-date-select').onchange = updateHRDashboard;
     document.getElementById('hr-shift-select').onchange = updateHRDashboard;
 
@@ -283,7 +259,6 @@
       showToast("Report exported!", "success");
     };
 
-    // Initial render
     renderManpowerBlocks();
     setupShifts();
     setToday('date-select');
@@ -291,4 +266,3 @@
   </script>
 </body>
 </html>
-
