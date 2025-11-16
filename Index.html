@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workforce Management System</title>
+  <!-- OPTIONAL: Only required if you have these SDKs. Safe to remove/comment out. -->
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing: border-box; }
+    .shift-tab { transition: all 0.2s ease; }
+    .shift-tab.active { background: #2563eb; color: white; }
+    .block-row { transition: background-color 0.2s ease; }
+    .block-row:hover { background-color: #f8fafc; }
+    .loading { opacity: 0.6; pointer-events: none; }
+    @media (max-width: 768px) {
+      .desktop-table { display: none; }
+      .mobile-cards { display: block; }
+    }
+    @media (min-width: 769px) {
+      .desktop-table { display: table; }
+      .mobile-cards { display: none; }
+    }
+    @view-transition { navigation: auto; }
+  </style>
+</head>
+<body class="bg-white min-h-full">
+  <main class="container mx-auto px-4 py-6 max-w-6xl">
+    <!-- Header -->
+    <header class="mb-8 text-center">
+      <h1 id="app-title" class="text-3xl font-bold text-gray-800 mb-2">Workforce Management System</h1>
+      <p id="company-name" class="text-lg text-gray-600">Your Company</p>
+    </header>
+    <!-- User Type Selection -->
+    <div class="mb-6 flex justify-center">
+      <div class="bg-gray-100 rounded-lg p-1 flex">
+        <button id="contractor-tab" class="px-6 py-2 rounded-md font-medium transition-all duration-200 bg-blue-600 text-white"> Contractor </button>
+        <button id="hr-tab" class="px-6 py-2 rounded-md font-medium transition-all duration-200 text-gray-600 hover:text-gray-800"> HR Dashboard </button>
+      </div>
+    </div>
+    <!-- Contractor Interface -->
+    <div id="contractor-interface" class="space-y-6">
+      <!-- Contractor Selection -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <label for="contractor-select" class="block text-sm font-medium text-gray-700 mb-2">Select Contractor</label>
+        <select id="contractor-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">Choose a contractor...</option>
+          <option value="ABC Construction Ltd">ABC Construction Ltd</option>
+          <option value="XYZ Engineering Corp">XYZ Engineering Corp</option>
+          <option value="Delta Industrial Services">Delta Industrial Services</option>
+          <option value="Prime Contractors Inc">Prime Contractors Inc</option>
+          <option value="Elite Workforce Solutions">Elite Workforce Solutions</option>
+        </select>
+      </div>
+      <!-- Date Selection -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <label for="date-select" class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+        <input type="date" id="date-select" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <!-- Shift Tabs -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Shift</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <button class="shift-tab px-4 py-3 border border-gray-300 rounded-md font-medium text-sm hover:bg-gray-50 active" data-shift="A"> A Shift<br><span class="text-xs text-gray-500">6:00 AM</span> </button>
+          <button class="shift-tab px-4 py-3 border border-gray-300 rounded-md font-medium text-sm hover:bg-gray-50" data-shift="G"> G Shift<br><span class="text-xs text-gray-500">9:00 AM</span> </button>
+          <button class="shift-tab px-4 py-3 border border-gray-300 rounded-md font-medium text-sm hover:bg-gray-50" data-shift="B"> B Shift<br><span class="text-xs text-gray-500">2:00 PM</span> </button>
+          <button class="shift-tab px-4 py-3 border border-gray-300 rounded-md font-medium text-sm hover:bg-gray-50" data-shift="C"> C Shift<br><span class="text-xs text-gray-500">10:00 PM</span> </button>
+        </div>
+      </div>
+      <!-- Manpower Entry -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Manpower Allocation</h3>
+        <div class="space-y-4" id="manpower-blocks"></div>
+        <div class="mt-6 pt-4 border-t border-gray-200">
+          <button id="submit-btn" class="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"> Submit Manpower Data </button>
+        </div>
+      </div>
+    </div>
+    <!-- HR Dashboard Interface -->
+    <div id="hr-interface" class="space-y-6 hidden">
+      <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="hr-date-select" class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+            <input type="date" id="hr-date-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="hr-shift-select" class="block text-sm font-medium text-gray-700 mb-2">Select Shift</label>
+            <select id="hr-shift-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="A">A Shift (6:00 AM)</option>
+              <option value="G">G Shift (9:00 AM)</option>
+              <option value="B">B Shift (2:00 PM)</option>
+              <option value="C">C Shift (10:00 PM)</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="export-btn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md font-medium hover:bg-green-700 transition-colors duration-200"> Export Report </button>
+          </div>
+        </div>
+      </div>
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 class="text-sm font-medium text-blue-800 mb-2">Total Manpower</h3>
+          <p id="total-manpower" class="text-3xl font-bold text-blue-900">0</p>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+          <h3 class="text-sm font-medium text-green-800 mb-2">Active Contractors</h3>
+          <p id="active-contractors" class="text-3xl font-bold text-green-900">0</p>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+          <h3 class="text-sm font-medium text-purple-800 mb-2">Blocks Covered</h3>
+          <p id="blocks-covered" class="text-3xl font-bold text-purple-900">0</p>
+        </div>
+      </div>
+      <!-- Data Table -->
+      <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800">Manpower Breakdown</h3>
+        </div>
+        <div class="desktop-table overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contractor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manpower</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              </tr>
+            </thead>
+            <tbody id="hr-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+        <div class="mobile-cards p-4 space-y-4" id="hr-mobile-cards"></div>
+      </div>
+    </div>
+  </main>
+  <script>
+    const defaultConfig = {
+      app_title: "Workforce Management System",
+      company_name: "Your Company"
+    };
+
+    let currentShift = 'A';
+    let currentData = [];
+    let isLoading = false;
+
+    const blocks = [
+      'Block A - Production',
+      'Block B - Assembly',
+      'Block C - Quality Control',
+      'Block D - Packaging',
+      'Block E - Maintenance',
+      'Block F - Logistics',
+      'Block G - Administration',
+      'Block H - Security'
+    ];
+
+    const dataHandler = {
+      onDataChanged(data) {
+        currentData = Array.isArray(data) ? data : (data.records || []);
+        if (!document.getElementById('hr-interface').classList.contains('hidden')) {
+          updateHRDashboard();
+        }
+      }
+    };
+
+    async function initializeApp() {
+      if (!window.dataSdk) {
+        console.warn("window.dataSdk is not available. SDK operations will be skipped.");
+      } else {
+        try {
+          const initResult = await window.dataSdk.init(dataHandler);
+          if (!initResult || !initResult.isOk) {
+            console.error("Failed to initialize data SDK (isOk=false). initResult:", initResult);
+          } else {
+            await refreshData();
+          }
+        } catch (err) {
+          console.error("Error during dataSdk.init:", err);
+        }
+      }
+
+      if (window.elementSdk) {
+        try {
+          window.elementSdk.init({
+            defaultConfig,
+            onConfigChange: async (config) => {
+              document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+              document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+            },
+            mapToCapabilities: () => ({
+              recolorables: [],
+              borderables: [],
+              fontEditable: undefined,
+              fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) =>
+              new Map([
+                ["app_title", config.app_title || defaultConfig.app_title],
+                ["company_name", config.company_name || defaultConfig.company_name]
+              ])
+          });
+        } catch (err) {
+          console.warn("elementSdk init failed:", err);
+        }
+      } else {
+        console.info("elementSdk not present; continuing without it.");
+      }
+
+      setupEventListeners();
+      initializeDates();
+      renderManpowerBlocks();
+    }
+
+    function setupEventListeners() {
+      document.getElementById('contractor-tab').addEventListener('click', () => switchTab('contractor'));
+      document.getElementById('hr-tab').addEventListener('click', () => switchTab('hr'));
+      document.querySelectorAll('.shift-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          const button = e.currentTarget;
+          document.querySelectorAll('.shift-tab').forEach(t => t.classList.remove('active'));
+          button.classList.add('active');
+          currentShift = button.dataset.shift;
+        });
+      });
+      document.getElementById('submit-btn').addEventListener('click', handleSubmit);
+      document.getElementById('hr-date-select').addEventListener('change', updateHRDashboard);
+      document.getElementById('hr-shift-select').addEventListener('change', updateHRDashboard);
+      document.getElementById('export-btn').addEventListener('click', exportReport);
+    }
+
+    function initializeDates() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('date-select').value = today;
+      document.getElementById('hr-date-select').value = today;
+    }
+
+    function switchTab(tab) {
+      const contractorTab = document.getElementById('contractor-tab');
+      const hrTab = document.getElementById('hr-tab');
+      const contractorInterface = document.getElementById('contractor-interface');
+      const hrInterface = document.getElementById('hr-interface');
+
+      if (tab === 'contractor') {
+        contractorTab.classList.add('bg-blue-600', 'text-white');
+        contractorTab.classList.remove('text-gray-600');
+        hrTab.classList.remove('bg-blue-600', 'text-white');
+        hrTab.classList.add('text-gray-600');
+        contractorInterface.classList.remove('hidden');
+        hrInterface.classList.add('hidden');
+      } else {
+        hrTab.classList.add('bg-blue-600', 'text-white');
+        hrTab.classList.remove('text-gray-600');
+        contractorTab.classList.remove('bg-blue-600', 'text-white');
+        contractorTab.classList.add('text-gray-600');
+        hrInterface.classList.remove('hidden');
+        contractorInterface.classList.add('hidden');
+        refreshData().then(() => {
+          updateHRDashboard();
+        }).catch(err => {
+          updateHRDashboard();
+        });
+      }
+    }
+
+    function renderManpowerBlocks() {
+      const container = document.getElementById('manpower-blocks');
+      container.innerHTML = '';
+      blocks.forEach((block, index) => {
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'block-row flex items-center justify-between p-4 border border-gray-200 rounded-md';
+        blockDiv.innerHTML = `
+          <label class="text-sm font-medium text-gray-700 flex-1">${block}</label>
+          <input type="number"
+            id="manpower-${index}"
+            min="0"
+            placeholder="0"
+            class="w-20 px-3 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        `;
+        container.appendChild(blockDiv);
+      });
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      if (isLoading) return;
+      const contractorName = document.getElementById('contractor-select').value;
+      const date = document.getElementById('date-select').value;
+      if (!contractorName) {
+        showMessage('Please select a contractor', 'error');
+        return;
+      }
+      if (!date) {
+        showMessage('Please select a date', 'error');
+        return;
+      }
+      if (currentData && currentData.length >= 999) {
+        showMessage('Maximum limit of 999 records reached. Please delete some records first.', 'error');
+        return;
+      }
+      setLoading(true);
+      try {
+        const manpowerData = [];
+        blocks.forEach((block, index) => {
+          const manpowerInput = document.getElementById(`manpower-${index}`);
+          const manpower = parseInt(manpowerInput.value) || 0;
+          if (manpower > 0) {
+            manpowerData.push({
+              id: `${contractorName}-${currentShift}-${date}-${index}-${Date.now()}`,
+              contractor_name: contractorName,
+              shift: currentShift,
+              date,
+              block_name: block,
+              manpower,
+              submitted_at: new Date().toISOString()
+            });
+          }
+        });
+        if (manpowerData.length === 0) {
+          showMessage('Please enter manpower for at least one block', 'error');
+          setLoading(false);
+          return;
+        }
+        if (!window.dataSdk || typeof window.dataSdk.create !== 'function') {
+          throw new Error('dataSdk.create is not available. Cannot submit records.');
+        }
+        for (const record of manpowerData) {
+          const result = await window.dataSdk.create(record);
+          if (!result || !result.isOk) {
+            throw new Error('Failed to save data');
+          }
+        }
+        await refreshData();
+        showMessage('Manpower data submitted successfully!', 'success');
+        blocks.forEach((_, index) => {
+          const el = document.getElementById(`manpower-${index}`);
+          if (el) el.value = '';
+        });
+      } catch (error) {
+        showMessage('Error submitting data. Please try again.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function updateHRDashboard() {
+      const selectedDate = document.getElementById('hr-date-select').value;
+      const selectedShift = document.getElementById('hr-shift-select').value;
+      const dataArray = Array.isArray(currentData) ? currentData : (currentData.records || []);
+      const filteredData = dataArray.filter(record =>
+        String(record.date).startsWith(selectedDate) && String(record.shift) === selectedShift
+      );
+      const totalManpower = filteredData.reduce((sum, record) => sum + (Number(record.manpower) || 0), 0);
+      const activeContractors = new Set(filteredData.map(record => record.contractor_name)).size;
+      const blocksCovered = new Set(filteredData.map(record => record.block_name)).size;
+      document.getElementById('total-manpower').textContent = totalManpower;
+      document.getElementById('active-contractors').textContent = activeContractors;
+      document.getElementById('blocks-covered').textContent = blocksCovered;
+      updateHRTable(filteredData);
+    }
+
+    function updateHRTable(data) {
+      const tableBody = document.getElementById('hr-table-body');
+      const mobileCards = document.getElementById('hr-mobile-cards');
+      tableBody.innerHTML = '';
+      mobileCards.innerHTML = '';
+      if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No data available for selected date and shift</td></tr>';
+        mobileCards.innerHTML = '<div class="text-center text-gray-500 py-8">No data available for selected date and shift</div>';
+        return;
+      }
+      data.forEach(record => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.block_name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.contractor_name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">${record.manpower}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.shift} Shift</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.date}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+      data.forEach(record => {
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200';
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-medium text-gray-900">${record.block_name}</h4>
+            <span class="text-lg font-bold text-blue-600">${record.manpower}</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-1">${record.contractor_name}</p>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>${record.shift} Shift</span>
+            <span>${record.date}</span>
+          </div>
+        `;
+        mobileCards.appendChild(card);
+      });
+    }
+
+    async function exportReport() {
+      const selectedDate = document.getElementById('hr-date-select').value;
+      const selectedShift = document.getElementById('hr-shift-select').value;
+      const dataArray = Array.isArray(currentData) ? currentData : (currentData.records || []);
+      const filteredData = dataArray.filter(record =>
+        String(record.date).startsWith(selectedDate) && String(record.shift) === selectedShift
+      );
+      if (filteredData.length === 0) {
+        showMessage('No data to export for selected date and shift', 'error');
+        return;
+      }
+      const headers = ['Block', 'Contractor', 'Manpower', 'Shift', 'Date'];
+      const csvContent = [
+        headers.join(','),
+        ...filteredData.map(record => [
+          `"${String(record.block_name).replace(/"/g, '""')}"`,
+          `"${String(record.contractor_name).replace(/"/g, '""')}"`,
+          record.manpower,
+          `"${record.shift} Shift"`,
+          record.date
+        ].join(','))
+      ].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `workforce-report-${selectedDate}-${selectedShift}-shift.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showMessage('Report exported successfully!', 'success');
+    }
+
+    async function refreshData() {
+      if (!window.dataSdk) return;
+      try {
+        if (typeof window.dataSdk.getAll === 'function') {
+          const res = await window.dataSdk.getAll();
+          if (Array.isArray(res)) {
+            currentData = res;
+          } else if (res && Array.isArray(res.records)) {
+            currentData = res.records;
+          } else if (res && Array.isArray(res.data)) {
+            currentData = res.data;
+          }
+        } else if (typeof window.dataSdk.list === 'function') {
+          const res = await window.dataSdk.list();
+          currentData = (res && res.records) ? res.records : (res || []);
+        }
+      } catch (err) { /* silently ignore SDK errors for demo */ }
+    }
+
+    function setLoading(loading) {
+      isLoading = loading;
+      const submitBtn = document.getElementById('submit-btn');
+      if (loading) {
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Submitting...';
+      } else {
+        submitBtn.classList.remove('loading');
+        submitBtn.textContent = 'Submit Manpower Data';
+      }
+    }
+
+    function showMessage(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 px-6 py-3 rounded-md text-white font-medium z-50 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>
