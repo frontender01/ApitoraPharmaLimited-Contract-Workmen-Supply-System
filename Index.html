@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workforce Management System</title>
-  <!-- OPTIONAL: Only required if you have these SDKs. Safe to remove/comment out. -->
-  <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { box-sizing: border-box; }
@@ -42,7 +39,6 @@
     </div>
     <!-- Contractor Interface -->
     <div id="contractor-interface" class="space-y-6">
-      <!-- Contractor Selection -->
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <label for="contractor-select" class="block text-sm font-medium text-gray-700 mb-2">Select Contractor</label>
         <select id="contractor-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -54,12 +50,10 @@
           <option value="Elite Workforce Solutions">Elite Workforce Solutions</option>
         </select>
       </div>
-      <!-- Date Selection -->
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <label for="date-select" class="block text-sm font-medium text-gray-700 mb-2">Date</label>
         <input type="date" id="date-select" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </div>
-      <!-- Shift Tabs -->
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Shift</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -69,7 +63,6 @@
           <button class="shift-tab px-4 py-3 border border-gray-300 rounded-md font-medium text-sm hover:bg-gray-50" data-shift="C"> C Shift<br><span class="text-xs text-gray-500">10:00 PM</span> </button>
         </div>
       </div>
-      <!-- Manpower Entry -->
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Manpower Allocation</h3>
         <div class="space-y-4" id="manpower-blocks"></div>
@@ -78,7 +71,6 @@
         </div>
       </div>
     </div>
-    <!-- HR Dashboard Interface -->
     <div id="hr-interface" class="space-y-6 hidden">
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -100,7 +92,6 @@
           </div>
         </div>
       </div>
-      <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 class="text-sm font-medium text-blue-800 mb-2">Total Manpower</h3>
@@ -115,7 +106,6 @@
           <p id="blocks-covered" class="text-3xl font-bold text-purple-900">0</p>
         </div>
       </div>
-      <!-- Data Table -->
       <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800">Manpower Breakdown</h3>
@@ -139,11 +129,14 @@
     </div>
   </main>
   <script>
+    // 1. Replace with your Apps Script Web App URL after deployment!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSahYjhU_VJgSbTz2AAC0dqkwvW3eHdlFYr6eriadKZp7rjT6jyj7u45jFlg2IovFMTw/exec";
+
+    // ---- APP LOGIC ----
     const defaultConfig = {
       app_title: "Workforce Management System",
       company_name: "Your Company"
     };
-
     let currentShift = 'A';
     let currentData = [];
     let isLoading = false;
@@ -158,63 +151,6 @@
       'Block G - Administration',
       'Block H - Security'
     ];
-
-    const dataHandler = {
-      onDataChanged(data) {
-        currentData = Array.isArray(data) ? data : (data.records || []);
-        if (!document.getElementById('hr-interface').classList.contains('hidden')) {
-          updateHRDashboard();
-        }
-      }
-    };
-
-    async function initializeApp() {
-      if (!window.dataSdk) {
-        console.warn("window.dataSdk is not available. SDK operations will be skipped.");
-      } else {
-        try {
-          const initResult = await window.dataSdk.init(dataHandler);
-          if (!initResult || !initResult.isOk) {
-            console.error("Failed to initialize data SDK (isOk=false). initResult:", initResult);
-          } else {
-            await refreshData();
-          }
-        } catch (err) {
-          console.error("Error during dataSdk.init:", err);
-        }
-      }
-
-      if (window.elementSdk) {
-        try {
-          window.elementSdk.init({
-            defaultConfig,
-            onConfigChange: async (config) => {
-              document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
-              document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
-            },
-            mapToCapabilities: () => ({
-              recolorables: [],
-              borderables: [],
-              fontEditable: undefined,
-              fontSizeable: undefined
-            }),
-            mapToEditPanelValues: (config) =>
-              new Map([
-                ["app_title", config.app_title || defaultConfig.app_title],
-                ["company_name", config.company_name || defaultConfig.company_name]
-              ])
-          });
-        } catch (err) {
-          console.warn("elementSdk init failed:", err);
-        }
-      } else {
-        console.info("elementSdk not present; continuing without it.");
-      }
-
-      setupEventListeners();
-      initializeDates();
-      renderManpowerBlocks();
-    }
 
     function setupEventListeners() {
       document.getElementById('contractor-tab').addEventListener('click', () => switchTab('contractor'));
@@ -244,7 +180,6 @@
       const hrTab = document.getElementById('hr-tab');
       const contractorInterface = document.getElementById('contractor-interface');
       const hrInterface = document.getElementById('hr-interface');
-
       if (tab === 'contractor') {
         contractorTab.classList.add('bg-blue-600', 'text-white');
         contractorTab.classList.remove('text-gray-600');
@@ -259,11 +194,7 @@
         contractorTab.classList.add('text-gray-600');
         hrInterface.classList.remove('hidden');
         contractorInterface.classList.add('hidden');
-        refreshData().then(() => {
-          updateHRDashboard();
-        }).catch(err => {
-          updateHRDashboard();
-        });
+        updateHRDashboard();
       }
     }
 
@@ -285,6 +216,9 @@
       });
     }
 
+    // Store submitted data locally for display/export (does not persist after page reload!)
+    let localRecords = [];
+
     async function handleSubmit(e) {
       e.preventDefault();
       if (isLoading) return;
@@ -298,10 +232,6 @@
         showMessage('Please select a date', 'error');
         return;
       }
-      if (currentData && currentData.length >= 999) {
-        showMessage('Maximum limit of 999 records reached. Please delete some records first.', 'error');
-        return;
-      }
       setLoading(true);
       try {
         const manpowerData = [];
@@ -310,12 +240,11 @@
           const manpower = parseInt(manpowerInput.value) || 0;
           if (manpower > 0) {
             manpowerData.push({
-              id: `${contractorName}-${currentShift}-${date}-${index}-${Date.now()}`,
               contractor_name: contractorName,
               shift: currentShift,
-              date,
+              date: date,
               block_name: block,
-              manpower,
+              manpower: manpower,
               submitted_at: new Date().toISOString()
             });
           }
@@ -325,16 +254,15 @@
           setLoading(false);
           return;
         }
-        if (!window.dataSdk || typeof window.dataSdk.create !== 'function') {
-          throw new Error('dataSdk.create is not available. Cannot submit records.');
+        // Send each record to Google Apps Script (Google Sheets)
+        for (let record of manpowerData) {
+          await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(record),
+            headers: { "Content-Type": "application/json" }
+          });
+          localRecords.push(record); // Save for HR display/session export
         }
-        for (const record of manpowerData) {
-          const result = await window.dataSdk.create(record);
-          if (!result || !result.isOk) {
-            throw new Error('Failed to save data');
-          }
-        }
-        await refreshData();
         showMessage('Manpower data submitted successfully!', 'success');
         blocks.forEach((_, index) => {
           const el = document.getElementById(`manpower-${index}`);
@@ -350,8 +278,7 @@
     function updateHRDashboard() {
       const selectedDate = document.getElementById('hr-date-select').value;
       const selectedShift = document.getElementById('hr-shift-select').value;
-      const dataArray = Array.isArray(currentData) ? currentData : (currentData.records || []);
-      const filteredData = dataArray.filter(record =>
+      const filteredData = localRecords.filter(record =>
         String(record.date).startsWith(selectedDate) && String(record.shift) === selectedShift
       );
       const totalManpower = filteredData.reduce((sum, record) => sum + (Number(record.manpower) || 0), 0);
@@ -403,11 +330,10 @@
       });
     }
 
-    async function exportReport() {
+    function exportReport() {
       const selectedDate = document.getElementById('hr-date-select').value;
       const selectedShift = document.getElementById('hr-shift-select').value;
-      const dataArray = Array.isArray(currentData) ? currentData : (currentData.records || []);
-      const filteredData = dataArray.filter(record =>
+      const filteredData = localRecords.filter(record =>
         String(record.date).startsWith(selectedDate) && String(record.shift) === selectedShift
       );
       if (filteredData.length === 0) {
@@ -437,25 +363,6 @@
       showMessage('Report exported successfully!', 'success');
     }
 
-    async function refreshData() {
-      if (!window.dataSdk) return;
-      try {
-        if (typeof window.dataSdk.getAll === 'function') {
-          const res = await window.dataSdk.getAll();
-          if (Array.isArray(res)) {
-            currentData = res;
-          } else if (res && Array.isArray(res.records)) {
-            currentData = res.records;
-          } else if (res && Array.isArray(res.data)) {
-            currentData = res.data;
-          }
-        } else if (typeof window.dataSdk.list === 'function') {
-          const res = await window.dataSdk.list();
-          currentData = (res && res.records) ? res.records : (res || []);
-        }
-      } catch (err) { /* silently ignore SDK errors for demo */ }
-    }
-
     function setLoading(loading) {
       isLoading = loading;
       const submitBtn = document.getElementById('submit-btn');
@@ -476,7 +383,11 @@
       setTimeout(() => { toast.remove(); }, 3000);
     }
 
-    document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      initializeDates();
+      renderManpowerBlocks();
+    });
   </script>
 </body>
 </html>
